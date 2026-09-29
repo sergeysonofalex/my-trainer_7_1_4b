@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тренажёр: Единицы измерения информации</title>
+<style>
+  :root{
+    --blue:#2563eb;
+    --blue-d:#1d4ed8;
+    --green:#16a34a;
+    --red:#dc2626;
+    --orange:#ea580c;
+    --ink:#0f172a;
+    --muted:#64748b;
+    --line:#e2e8f0;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:"Segoe UI","Trebuchet MS",Arial,sans-serif;
+    background:linear-gradient(135deg,#eef4ff 0%,#e8fbf5 50%,#f5f0ff 100%);
+    color:var(--ink);
+    font-size:18px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:28px 20px 120px;
+    min-height:100vh;
+  }
+  .wrap{width:min(940px,100%);}
+  .screen{display:none;animation:fade .35s ease;}
+  .screen.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
+
+  .card{
+    background:#fff;
+    border-radius:24px;
+    box-shadow:0 20px 55px rgba(15,23,42,.13);
+    padding:36px 40px;
+    border:1px solid rgba(226,232,240,.9);
+  }
+
+  /* ---------- Стартовый экран ---------- */
+  .start-card{text-align:center;}
+  .logo{font-size:54px;line-height:1;margin-bottom:10px;}
+  h1{
+    font-size:34px;
+    margin:0 0 8px;
+    letter-spacing:-.4px;
+  }
+  .subtitle{
+    color:var(--muted);
+    font-size:17px;
+    margin:0 0 30px;
+  }
+  .field-label{
+    display:block;
+    text-align:left;
+    font-size:15px;
+    font-weight:700;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    margin-bottom:8px;
+  }
+  input[type="text"]{
+    width:100%;
+    padding:16px 18px;
+    font-size:20px;
+    font-family:inherit;
+    border:2px solid #dbe3ee;
+    border-radius:14px;
+    outline:none;
+    background:#f8fafc;
+    transition:border-color .18s, box-shadow .18s, background .18s;
+  }
+  input[type="text"]:focus{
+    border-color:var(--blue);
+    background:#fff;
+    box-shadow:0 0 0 4px rgba(37,99,235,.14);
+  }
+  input[type="text"]:disabled{background:#f1f5f9;color:#64748b;}
+
+  .hint{
+    font-size:14px;
+    color:var(--muted);
+    text-align:left;
+    margin:10px 0 22px;
+    min-height:20px;
+  }
+  .hint.ok{color:var(--green);font-weight:600;}
+  .hint.bad{color:var(--red);font-weight:600;}
+
+  .btn{
+    font-family:inherit;
+    font-size:19px;
+    font-weight:700;
+    border:none;
+    border-radius:14px;
+    padding:16px 30px;
+    cursor:pointer;
+    transition:background .18s, transform .1s, box-shadow .18s;
+    letter-spacing:.2px;
+  }
+  .btn-primary{
+    background:var(--blue);
+    color:#fff;
+    box-shadow:0 10px 24px rgba(37,99,235,.30);
+  }
+  .btn-primary:hover:not(:disabled){background:var(--blue-d);}
+  .btn-primary:active:not(:disabled){transform:translateY(1px);}
+  .btn-primary:disabled{
+    background:#cbd5e1;
+    color:#f8fafc;
+    box-shadow:none;
+    cursor:not-allowed;
+  }
+  #startBtn{width:100%;padding:18px;font-size:21px;}
+
+  .rules{
+    margin-top:26px;
+    font-size:16px;
+    color:var(--muted);
+    background:#f8fafc;
+    border:1px dashed #cbd5e1;
+    border-radius:14px;
+    padding:14px 18px;
+  }
+  .rules b{color:var(--ink);}
+
+  /* ---------- Экран теста ---------- */
+  .topbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:16px;
+  }
+  .badge{
+    background:#f1f5f9;
+    border-radius:999px;
+    padding:9px 18px;
+    font-size:16px;
+    color:#334155;
+    font-weight:600;
+    white-space:nowrap;
+  }
+  .badge.name{background:#e0e7ff;color:#3730a3;}
+  .badge.score{background:#dcfce7;color:#166534;}
+
+  .progress{
+    height:12px;
+    background:#e9eef6;
+    border-radius:999px;
+    overflow:hidden;
+    margin-bottom:22px;
+  }
+  .progress-fill{
+    height:100%;
+    width:0%;
+    border-radius:999px;
+    background:linear-gradient(90deg,#2563eb,#22c55e);
+    transition:width .4s ease;
+  }
+
+  .memo{
+    font-size:15px;
+    color:#475569;
+    background:#f8fafc;
+    border-left:5px solid var(--blue);
+    border-radius:10px;
+    padding:11px 16px;
+    margin-bottom:24px;
+    line-height:1.5;
+  }
+
+  .question{
+    font-size:26px;
+    line-height:1.45;
+    font-weight:700;
+    margin:0 0 24px;
+  }
+  .answer-row{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .answer-row input{flex:1 1 240px;}
+  .answer-row .btn{flex:0 0 auto;}
+
+  .feedback{
+    min-height:30px;
+    margin-top:18px;
+    font-size:19px;
+    font-weight:700;
+  }
+  .feedback.ok{color:var(--green);}
+  .feedback.bad{color:var(--red);}
+  .feedback.warn{color:var(--orange);}
+
+  /* ---------- Экран результатов ---------- */
+  .result-card{text-align:center;}
+  .result-name{
+    font-size:26px;
+    font-weight:700;
+    margin:6px 0 22px;
+    color:#1e293b;
+  }
+  .result-name span{color:var(--blue);}
+  .result-score{
+    font-size:44px;
+    font-weight:800;
+    letter-spacing:-.5px;
+    margin-bottom:14px;
+  }
+  .result-grade{
+    display:inline-block;
+    font-size:34px;
+    font-weight:800;
+    padding:14px 34px;
+    border-radius:18px;
+    margin-bottom:16px;
+  }
+  .grade-5{background:#dcfce7;color:#15803d;}
+  .grade-4{background:#dbeafe;color:#1d4ed8;}
+  .grade-3{background:#ffedd5;color:#c2410c;}
+  .grade-2{background:#fee2e2;color:#b91c1c;}
+  .result-detail{
+    font-size:17px;
+    color:var(--muted);
+    margin-bottom:28px;
+  }
+  #restartBtn{width:100%;padding:18px;font-size:21px;}
+
+  /* ---------- Калькулятор ---------- */
+  #calcToggle{
+    position:fixed;
+    right:20px;
+    bottom:20px;
+    z-index:1000;
+    background:#0f172a;
+    color:#fff;
+    border:none;
+    border-radius:16px;
+    padding:14px 22px;
+    font-size:17px;
+    font-weight:700;
+    font-family:inherit;
+    cursor:pointer;
+    box-shadow:0 12px 28px rgba(15,23,42,.32);
+    transition:background .18s, transform .1s;
+  }
+  #calcToggle:hover{background:#1e293b;}
+  #calcToggle:active{transform:translateY(1px);}
+
+  #calcPanel{
+    position:fixed;
+    right:20px;
+    bottom:86px;
+    width:252px;
+    z-index:1000;
+    background:#ffffff;
+    border-radius:20px;
+    box-shadow:0 22px 50px rgba(15,23,42,.28);
+    padding:14px;
+    display:none;
+    border:1px solid var(--line);
+  }
+  #calcPanel.open{display:block;animation:pop .18s ease;}
+  @keyframes pop{from{opacity:0;transform:translateY(10px) scale(.97);}to{opacity:1;transform:none;}}
+
+  #calcDisplay{
+    background:#0f172a;
+    color:#fff;
+    border-radius:12px;
+    padding:12px 14px;
+    font-family:"Consolas","Courier New",monospace;
+    font-size:22px;
+    text-align:right;
+    min-height:54px;
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    word-break:break-all;
+    margin-bottom:10px;
+    overflow:hidden;
+  }
+  .calc-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+  }
+  .calc-btn{
+    font-family:inherit;
+    font-size:18px;
+    font-weight:700;
+    padding:13px 0;
+    border:none;
+    border-radius:11px;
+    background:#f1f5f9;
+    color:#0f172a;
+    cursor:pointer;
+    transition:background .15s, transform .08s;
+    user-select:none;
+  }
+  .calc-btn:hover{background:#e2e8f0;}
+  .calc-btn:active{transform:scale(.96);}
+  .calc-btn.op{background:#dbeafe;color:#1d4ed8;}
+  .calc-btn.op:hover{background:#bfdbfe;}
+  .calc-btn.danger{background:#fee2e2;color:#b91c1c;}
+  .calc-btn.danger:hover{background:#fecaca;}
+  .calc-btn.eq{
+    background:var(--blue);
+    color:#fff;
+    grid-row:span 2;
+  }
+  .calc-btn.eq:hover{background:var(--blue-d);}
+  .calc-btn.zero{grid-column:span 2;}
+
+  @media (max-width:640px){
+    body{padding:16px 12px 130px;}
+    .card{padding:24px 20px;border-radius:20px;}
+    h1{font-size:26px;}
+    .question{font-size:21px;}
+    .badge{font-size:14px;padding:7px 13px;}
+    .result-score{font-size:34px;}
+    .result-grade{font-size:26px;}
+    #calcPanel{width:220px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ЭКРАН 1: СТАРТ -->
+  <section id="screen-start" class="screen active">
+    <div class="card start-card">
+      <div class="logo">💾</div>
+      <h1>Единицы измерения информации</h1>
+      <p class="subtitle">Интерактивный тренажёр · 7 класс · Информатика и ИИ</p>
+
+      <label class="field-label" for="studentName">Имя и фамилия ученика</label>
+      <input id="studentName" type="text" placeholder="Введите ваше Имя и Фамилию" autocomplete="off">
+      <p id="nameHint" class="hint">Введите минимум 2 символа, чтобы начать.</p>
+
+      <button id="startBtn" class="btn btn-primary" disabled>Начать тест</button>
+
+      <div class="rules">
+        <b>10 заданий</b> · от простого к сложному · 1 балл за каждый верный ответ
+      </div>
+    </div>
+  </section>
+
+  <!-- ЭКРАН 2: ТЕСТ -->
+  <section id="screen-quiz" class="screen">
+    <div class="card">
+      <div class="topbar">
+        <div class="badge name">👤 <span id="quizName">—</span></div>
+        <div class="badge">Вопрос <b id="qNum">1</b> из 10</div>
+        <div class="badge score">⭐ Баллы: <b id="scoreVal">0</b></div>
+      </div>
+
+      <div class="progress"><div id="progressFill" class="progress-fill"></div></div>
+
+      <div class="memo">
+        1 байт = 8 бит &nbsp;·&nbsp; 1 Кб = 1024 байт &nbsp;·&nbsp; 1 Мб = 1024 Кб &nbsp;·&nbsp; 1 Гб = 1024 Мб
+      </div>
+
+      <h2 id="questionText" class="question">—</h2>
+
+      <div class="answer-row">
+        <input id="answerInput" type="text" inputmode="numeric" placeholder="Ваш ответ (число)" autocomplete="off">
+        <button id="submitBtn" class="btn btn-primary">Ответить</button>
+      </div>
+
+      <div id="feedback" class="feedback"></div>
+    </div>
+  </section>
+
+  <!-- ЭКРАН 3: РЕЗУЛЬТАТ -->
+  <section id="screen-result" class="screen">
+    <div class="card result-card">
+      <div class="logo">🏁</div>
+      <h2 class="result-name">Результат ученика: <span id="resName">—</span></h2>
+      <div class="result-score" id="resScore">Набрано баллов: 0 из 10</div>
+      <div class="result-grade" id="resGrade">—</div>
+      <div class="result-detail" id="resDetail"></div>
+      <button id="restartBtn" class="btn btn-primary">Пройти заново</button>
+    </div>
+  </section>
+
+</div>
+
+<!-- КАЛЬКУЛЯТОР -->
+<button id="calcToggle">🧮 Калькулятор</button>
+<div id="calcPanel">
+  <div id="calcDisplay">0</div>
+  <div class="calc-grid">
+    <button class="calc-btn danger" data-calc="C">C</button>
+    <button class="calc-btn danger" data-calc="⌫">⌫</button>
+    <button class="calc-btn op" data-calc="/">÷</button>
+    <button class="calc-btn op" data-calc="*">×</button>
+
+    <button class="calc-btn" data-calc="7">7</button>
+    <button class="calc-btn" data-calc="8">8</button>
+    <button class="calc-btn" data-calc="9">9</button>
+    <button class="calc-btn op" data-calc="-">−</button>
+
+    <button class="calc-btn" data-calc="4">4</button>
+    <button class="calc-btn" data-calc="5">5</button>
+    <button class="calc-btn" data-calc="6">6</button>
+    <button class="calc-btn op" data-calc="+">+</button>
+
+    <button class="calc-btn" data-calc="1">1</button>
+    <button class="calc-btn" data-calc="2">2</button>
+    <button class="calc-btn" data-calc="3">3</button>
+    <button class="calc-btn eq" data-calc="=">=</button>
+
+    <button class="calc-btn zero" data-calc="0">0</button>
+    <button class="calc-btn" data-calc=".">.</button>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   ДАННЫЕ ЗАДАНИЙ
+   ========================================================= */
+const QUESTIONS = [
+  { text: "Переведите 16 бит в байты.",                                              answer: 2 },
+  { text: "Переведите 5 байт в биты.",                                               answer: 40 },
+  { text: "Переведите 2 Килобайта в байты.",                                         answer: 2048 },
+  { text: "Переведите 3 Мегабайта в Килобайты.",                                     answer: 3072 },
+  { text: "Переведите 4 Гигабайта в Мегабайты.",                                     answer: 4096 },
+  { text: "Сколько Килобайт содержат 5120 байт?",                                    answer: 5 },
+  { text: "Сколько Мегабайт содержат 8192 Килобайта?",                               answer: 8 },
+  { text: "Сколько Гигабайт содержат 10240 Мегабайт?",                               answer: 10 },
+  { text: "Переведите 2 Мегабайта напрямую в Байты.",                                answer: 2097152 },
+  { text: "На флешку объёмом 4 Гб (4096 Мб) записали фильм размером 2500 Мб и три презентации по 300 Мб каждая. Сколько МЕГАБАЙТ свободной памяти осталось на флешке?", answer: 696 }
+];
+
+/* =========================================================
+   ЭЛЕМЕНТЫ
+   ========================================================= */
+const screens = {
+  start:  document.getElementById('screen-start'),
+  quiz:   document.getElementById('screen-quiz'),
+  result: document.getElementById('screen-result')
+};
+
+const nameInput   = document.getElementById('studentName');
+const nameHint    = document.getElementById('nameHint');
+const startBtn    = document.getElementById('startBtn');
+
+const quizName    = document.getElementById('quizName');
+const qNum        = document.getElementById('qNum');
+const scoreVal    = document.getElementById('scoreVal');
+const progressFill= document.getElementById('progressFill');
+const questionText= document.getElementById('questionText');
+const answerInput = document.getElementById('answerInput');
+const submitBtn   = document.getElementById('submitBtn');
+const feedback    = document.getElementById('feedback');
+
+const resName     = document.getElementById('resName');
+const resScore    = document.getElementById('resScore');
+const resGrade    = document.getElementById('resGrade');
+const resDetail   = document.getElementById('resDetail');
+const restartBtn  = document.getElementById('restartBtn');
+
+/* =========================================================
+   СОСТОЯНИЕ
+   ========================================================= */
+let studentName = "";
+let currentIndex = 0;
+let score = 0;
+let answered = false;
+
+/* =========================================================
+   ПЕРЕКЛЮЧЕНИЕ ЭКРАНОВ
+   ========================================================= */
+function showScreen(key){
+  Object.values(screens).forEach(s => s.classList.remove('active'));
+  screens[key].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* =========================================================
+   СТАРТОВЫЙ ЭКРАН
+   ========================================================= */
+function validateName(){
+  const value = nameInput.value.trim();
+  if(value.length >= 2){
+    startBtn.disabled = false;
+    nameHint.textContent = "Отлично! Можно начинать. ✅";
+    nameHint.className = "hint ok";
+  } else {
+    startBtn.disabled = true;
+    if(value.length === 0){
+      nameHint.textContent = "Введите минимум 2 символа, чтобы начать.";
+    } else {
+      nameHint.textContent = "Слишком короткое имя — нужно минимум 2 символа.";
+    }
+    nameHint.className = "hint";
+  }
+}
+
+nameInput.addEventListener('input', validateName);
+
+nameInput.addEventListener('keydown', function(e){
+  if(e.key === 'Enter' && !startBtn.disabled) startTest();
+});
+
+startBtn.addEventListener('click', startTest);
+
+function startTest(){
+  const value = nameInput.value.trim();
+  if(value.length < 2) return;
+  studentName = value;
+  currentIndex = 0;
+  score = 0;
+  answered = false;
+  quizName.textContent = studentName;
+  showScreen('quiz');
+  renderQuestion();
+}
+
+/* =========================================================
+   ОТРИСОВКА ВОПРОСА
+   ========================================================= */
+function renderQuestion(){
+  answered = false;
+  const q = QUESTIONS[currentIndex];
+
+  qNum.textContent = (currentIndex + 1);
+  scoreVal.textContent = score;
+  questionText.textContent = (currentIndex + 1) + ". " + q.text;
+
+  answerInput.value = "";
+  answerInput.disabled = false;
+  answerInput.focus();
+
+  feedback.textContent = "";
+  feedback.className = "feedback";
+
+  submitBtn.textContent = "Ответить";
+
+  progressFill.style.width = (currentIndex / QUESTIONS.length * 100) + "%";
+}
+
+/* =========================================================
+   ПРОВЕРКА ОТВЕТА
+   ========================================================= */
+submitBtn.addEventListener('click', handleSubmit);
+
+answerInput.addEventListener('keydown', function(e){
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    handleSubmit();
+  }
+});
+
+function handleSubmit(){
+  if(answered){
+    goNext();
+    return;
+  }
+
+  const raw = answerInput.value.trim().replace(',', '.');
+
+  if(raw === ""){
+    feedback.textContent = "⚠️ Введите ответ, прежде чем проверять.";
+    feedback.className = "feedback warn";
+    return;
+  }
+
+  const value = Number(raw);
+  if(!isFinite(value)){
+    feedback.textContent = "⚠️ Ответ должен быть числом.";
+    feedback.className = "feedback warn";
+    return;
+  }
+
+  const correct = QUESTIONS[currentIndex].answer;
+  answered = true;
+  answerInput.disabled = true;
+
+  if(value === correct){
+    score++;
+    feedback.textContent = "✅ Верно! +1 балл";
+    feedback.className = "feedback ok";
+  } else {
+    feedback.textContent = "❌ Неверно. Правильный ответ: " + correct;
+    feedback.className = "feedback bad";
+  }
+
+  scoreVal.textContent = score;
+  progressFill.style.width = ((currentIndex + 1) / QUESTIONS.length * 100) + "%";
+
+  submitBtn.textContent = (currentIndex === QUESTIONS.length - 1)
+      ? "Показать результат"
+      : "Следующий вопрос";
+}
+
+function goNext(){
+  if(currentIndex < QUESTIONS.length - 1){
+    currentIndex++;
+    renderQuestion();
+  } else {
+    finishQuiz();
+  }
+}
+
+/* =========================================================
+   ФИНАЛЬНЫЙ ЭКРАН
+   ========================================================= */
+function finishQuiz(){
+  resName.textContent = studentName;
+  resScore.textContent = "Набрано баллов: " + score + " из " + QUESTIONS.length;
+
+  let gradeText = "";
+  let gradeClass = "";
+  let detail = "";
+
+  if(score === 10){
+    gradeText = "5 (Отлично)";
+    gradeClass = "grade-5";
+    detail = "Идеальный результат! Ты отлично разбираешься в единицах измерения информации.";
+  } else if(score >= 8){
+    gradeText = "4 (Хорошо)";
+    gradeClass = "grade-4";
+    detail = "Очень хороший результат! Осталось совсем немного до отличной оценки.";
+  } else if(score >= 5){
+    gradeText = "3 (Удовлетворительно)";
+    gradeClass = "grade-3";
+    detail = "Неплохо, но стоит повторить правила перевода единиц измерения.";
+  } else {
+    gradeText = "Попробуй ещё раз!";
+    gradeClass = "grade-2";
+    detail = "Повтори: 1 байт = 8 бит, 1 Кб = 1024 байт, 1 Мб = 1024 Кб, 1 Гб = 1024 Мб.";
+  }
+
+  resGrade.textContent = gradeText;
+  resGrade.className = "result-grade " + gradeClass;
+  resDetail.textContent = detail;
+
+  showScreen('result');
+}
+
+restartBtn.addEventListener('click', function(){
+  nameInput.value = "";
+  validateName();
+  currentIndex = 0;
+  score = 0;
+  answered = false;
+  showScreen('start');
+  nameInput.focus();
+});
+
+/* =========================================================
+   КАЛЬКУЛЯТОР
+   ========================================================= */
+const calcToggle = document.getElementById('calcToggle');
+const calcPanel  = document.getElementById('calcPanel');
+const calcDisplay= document.getElementById('calcDisplay');
+let calcExpr = "";
+let calcError = false;
+
+calcToggle.addEventListener('click', function(){
+  calcPanel.classList.toggle('open');
+  const isOpen = calcPanel.classList.contains('open');
+  calcToggle.textContent = isOpen ? "✖ Свернуть" : "🧮 Калькулятор";
+});
+
+calcPanel.addEventListener('click', function(e){
+  const btn = e.target.closest('.calc-btn');
+  if(!btn) return;
+  pressCalc(btn.dataset.calc);
+});
+
+function updateCalcDisplay(){
+  calcDisplay.textContent = calcExpr === "" ? "0" : calcExpr;
+}
+
+function pressCalc(key){
+  if(key === 'C'){
+    calcExpr = "";
+    calcError = false;
+    updateCalcDisplay();
+    return;
+  }
+
+  if(key === '⌫'){
+    if(calcError){
+      calcExpr = "";
+      calcError = false;
+    } else {
+      calcExpr = calcExpr.slice(0, -1);
+    }
+    updateCalcDisplay();
+    return;
+  }
+
+  if(key === '='){
+    if(calcExpr === "") return;
+    if(!/^[0-9+\-*/.]+$/.test(calcExpr)){
+      calcExpr = "Ошибка";
+      calcError = true;
+      updateCalcDisplay();
+      return;
+    }
+    try{
+      /* безопасное вычисление: строка уже проверена регулярным выражением */
+      const result = Function('"use strict";return (' + calcExpr + ')')();
+      if(typeof result !== 'number' || !isFinite(result)){
+        throw new Error("bad");
+      }
+      let rounded = Math.round(result * 1e10) / 1e10;
+      calcExpr = String(rounded);
+      calcError = false;
+    } catch(err){
+      calcExpr = "Ошибка";
+      calcError = true;
+    }
+    updateCalcDisplay();
+    return;
+  }
+
+  /* ввод цифры или оператора */
+  if(calcError){
+    calcExpr = "";
+    calcError = false;
+  }
+
+  /* защита от двух операторов подряд */
+  if("+-*/".includes(key) && "+-*/".includes(calcExpr.slice(-1))){
+    calcExpr = calcExpr.slice(0, -1) + key;
+  } else {
+    calcExpr += key;
+  }
+  updateCalcDisplay();
+}
+</script>
+</body>
+</html>
